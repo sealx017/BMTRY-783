@@ -9,7 +9,7 @@ library(DT)
 library(SNPRelate)
 library(dplyr)
 library(qqman)
-library(poolR)
+library(poolr)
 
 rm(list = ls())
 setwd("/Users/sealso/Research/Teaching/Data/RiceDiversity_44K_Genotypes_PLINK")
@@ -174,6 +174,18 @@ pheno_final <- data.frame(NSFTV_ID = rownames(y), y = y)
 # Run the GWAS analysis
 GWAS <- GWAS(pheno_final, geno_final, min.MAF = 0.05, P3D = TRUE, plot = FALSE)
 
+# Simple FDR controlled p values------
+
+GWAS$adj_p = p.adjust(GWAS$y, method = "BH")
+GWAS_1 <- GWAS %>% filter(y != "0")
+
+# List of significant SNPs
+GWAS_1 %>% filter(adj_p < 0.05)
+
+manhattan(x = GWAS_1, chr = "chrom", bp = "pos", p = "adj_p", snp = "marker", col = c("blue4", "orange3"), 
+          suggestiveline = -log10(0.05), logp = TRUE)
+
+
 
 # Read the genotypic file and create a matrix for each chromosome
 corr.matrix1 <- cor(Geno1[, 1:5888])
@@ -187,8 +199,10 @@ corr.matrix8 <- cor(Geno1[, 23588:25668])
 corr.matrix9 <- cor(Geno1[, 25669:27501])
 corr.matrix10 <- cor(Geno1[, 27502:29121])
 corr.matrix11 <- cor(Geno1[, 29122:31752])
-corr.matrix12 <- cor(Geno1[, 31753:33719])
-# Now use the meff function from pacakge to get effective number of tests
+corr.matrix12 <- cor(Geno1[, 31753:length(snp.id)])
+
+
+# Now use the meff function from poolr package to get effective number of tests
 # for each chromosome
 meff_liji_1 <- meff(corr.matrix1, method = "liji")
 meff_liji_2 <- meff(corr.matrix2, method = "liji")
@@ -209,14 +223,16 @@ Meff <- sum(meff_liji_1, meff_liji_2, meff_liji_3, meff_liji_4, meff_liji_5,
             meff_liji_6, meff_liji_7, meff_liji_8, meff_liji_9, meff_liji_10, meff_liji_11, 
             meff_liji_12)
 
-Meff = 3948
-p_threshold = (1 - (1 - 0.05))^1/3948
-p_threshold
+Meff = 3804
+p_threshold = 1 - (1 - 0.05)^(1/Meff) # Sidak correction p-value
 
 GWAS_1 <- GWAS %>% filter(y != "0")
 # List of significant SNPs
-GWAS_1 %>% filter(y < 1e-04)
+GWAS_1 %>% filter(y < p_threshold)
 
-manhattan(x = GWAS_1, chr = "chrom", bp = "pos", p = "y", snp = "marker", col = c("blue4", 
-                                                                                  "orange3"), suggestiveline = -log10(1e-04), logp = TRUE)
+manhattan(x = GWAS_1, chr = "chrom", bp = "pos", p = "y", snp = "marker", col = c("blue4", "orange3"), 
+          suggestiveline = -log10(p_threshold), logp = TRUE)
+
+
+
 
