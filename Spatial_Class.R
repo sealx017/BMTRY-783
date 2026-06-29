@@ -14,7 +14,7 @@ require(gridExtra)
 #----------------------------------------
 
 # loading the data from SpaceANOVA package
-data("IMC_T1DM") 
+IMC_T1DM <- SpaceANOVA::IMC_T1DM
 
 # checking the data structure
 knitr::kable(head(IMC_T1DM), format="markdown") 
