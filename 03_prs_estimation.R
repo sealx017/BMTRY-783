@@ -478,7 +478,7 @@ dev.off()
 
 
 ###############################################################################
-# Production caveats:
+# Caveats:
 # - Real PRS development requires external GWAS weights or much larger discovery
 #   samples, ancestry-matched LD information, harmonized alleles/builds, and
 #   independent external validation.
